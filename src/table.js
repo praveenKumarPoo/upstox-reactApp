@@ -2,11 +2,19 @@ import React from "react";
 import ReactDOM from "react-dom";
 import ReactDataGrid from "react-data-grid";
 import "./table.css";
-
+import LineChart from 'react-linechart';
+import '../node_modules/react-linechart/dist/styles.css';
+const getDescription = (value, row) =>{
+    return <>
+        <span>{value}</span>
+        <span>{`(${row.url}) by ${row.author}`}</span>
+        <span>{`[hide]`}</span>
+    </>
+}
 const columns = [
-  { key: "num_comments", name: "Comments"},
-  { key: "points", name: "Votes Counts" },
-  { key: "title", name: "News Details"}
+  { width: 100,key: "num_comments", name: "Comments"},
+  { width: 100,key: "points", name: "Votes Counts" },
+  { key: "title", name: "News Details", "formatter": ({value,row}) => getDescription(value,row)}
 ];
 
 const rows = [
@@ -32,14 +40,33 @@ export class TableData extends React.Component {
     });
   };
   render() {
+    const data = [
+        {							
+            color: "steelblue", 
+            points: this.state.rows.map(({points, num_comments})=>({
+                x: points? points: 0,
+                y: num_comments ? num_comments : 0
+            }))
+        }
+    ];
     return (
-      <ReactDataGrid
-        columns={columns}
-        rowGetter={i => this.state.rows[i]}
-        rowsCount={this.state.rows.length}
-        onGridRowsUpdated={this.onGridRowsUpdated}
-        enableCellSelect={true}
-      />
+        <div>
+            <ReactDataGrid
+                columns={columns}
+                rowGetter={i => this.state.rows[i]}
+                rowsCount={this.state.rows.length}
+                onGridRowsUpdated={this.onGridRowsUpdated}
+                enableCellSelect={true}
+            />
+            <LineChart
+                width={600}
+                height={400}
+                data={data}
+                ticks={20}
+                xLabel = {"ID"}
+                yLabel = {"Votes"}
+            />
+        </div>
     );
   }
 }
