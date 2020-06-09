@@ -24,9 +24,14 @@ const rows = [
 ];
 
 export class TableData extends React.Component {
-  state = { rows };
+  state = { rows, pageNo: 0 };
+  loadDatafromServer(pageNo){
+    fetch(`https://hn.algolia.com/api/v1/search?page=${pageNo}`).then(response => response.json())
+    .then(data => 
+      this.setState({rows: data.hits, pageNo}))
+  }
   componentDidMount(){
-      fetch("https://hn.algolia.com/api/v1/search").then(response => response.json())
+      fetch(`https://hn.algolia.com/api/v1/search`).then(response => response.json())
       .then(data => 
         this.setState({rows: data.hits}))
   }
@@ -40,6 +45,7 @@ export class TableData extends React.Component {
     });
   };
   render() {
+      const { pageNo }  = this.state ;
     const data = [
         {							
             color: "steelblue", 
@@ -58,6 +64,16 @@ export class TableData extends React.Component {
                 onGridRowsUpdated={this.onGridRowsUpdated}
                 enableCellSelect={true}
             />
+            <div>
+                <span onClick={()=>{
+                    let pageno = pageNo ? pageNo - 1 : 0;
+                    this.loadDatafromServer(pageno)
+                }} >Previous|</span>
+                <span  onClick={()=>{
+                    let pageno = pageNo + 1;
+                    this.loadDatafromServer(pageno)
+                }}>next</span>
+            </div>
             <LineChart
                 width={600}
                 height={400}
