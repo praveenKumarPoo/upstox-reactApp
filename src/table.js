@@ -58,7 +58,8 @@ const StyledGrid = styled.div`
 			}
     }
     .vote-link{
-        color: blue;
+        color: #908686;
+        text-decoration: none;
     }
     .upVoteWrapper{
         margin-left: 40px;
@@ -68,7 +69,7 @@ const StyledGrid = styled.div`
         height: 0; 
         border-left: 5px solid transparent;
         border-right: 5px solid transparent;
-        border-bottom: 5px solid black;
+        border-bottom: 5px solid #908686;
         cursor: pointer;
     }
     .react-grid-Cell{
@@ -162,19 +163,21 @@ export class TableData extends React.Component {
   state = { rows: [], pageNo: 0 };
   loadDatafromServer(pageNo){
     fetch(`https://hn.algolia.com/api/v1/search?page=${pageNo}`).then(response => response.json())
-    .then(data => 
-      this.setState({rows: data.hits, pageNo}))
+    .then(data =>{
+      const updatedData = this.getPresistData(data.hits)
+      this.setState({rows: updatedData, pageNo})
+    })
   }
   getDescription = (value, row) =>{
     return <>
         <span>{value}</span>
-        <span className="vote-link">{`(${row.url})`} </span>
+        <a className="vote-link" href={row.url} target="_blank">{`(${row.url})`} </a>
         <span>{`by ${row.author}`}</span>
         <span onClick={()=>{
             const existingHiddenRow = localStorage.getItem("hiddenRecords") ? JSON.parse(localStorage.getItem("hiddenRecords")).hiddenRows : [];
-            const newHiddenArray = [...new Set([...existingHiddenRow,row.points])];
+            const newHiddenArray = [...new Set([...existingHiddenRow,row.objectID])];
             localStorage.setItem("hiddenRecords",JSON.stringify({"hiddenRows":newHiddenArray}))
-            let newShowList = this.state.rows.filter(x=>newHiddenArray.indexOf(x.points)==-1);
+            let newShowList = this.state.rows.filter(x=>newHiddenArray.indexOf(x.objectID)==-1);
             this.setState({rows: newShowList});
             alert(localStorage.getItem("hiddenRecords"));
         }}>{`[hide]`}</span>
@@ -187,7 +190,12 @@ getUpVote(value, row){
     return <div className="upVoteWrapper"><div className="upVote" onClick={()=>{
         let mynewList = [...this.state.rows].map((obj)=>{
             const {points} = obj;
-            if(row.objectID==obj.objectID)obj.points = points+1;
+            if(row.objectID==obj.objectID){
+                obj.points = points+1;
+                let existingUpdatedRow = localStorage.getItem("updatedVotes") ? JSON.parse(localStorage.getItem("updatedVotes")) : {};
+                existingUpdatedRow[row.objectID] = obj.points;
+                localStorage.setItem("updatedVotes",JSON.stringify(existingUpdatedRow))
+            }
             return obj;
         });
         this.setState({rows: mynewList});
@@ -199,10 +207,39 @@ columns = [
   { width: 100,key: "points", name: "Up Votes", "formatter": ({value,row}) =>this.getUpVote(value,row) },
   { key: "title", name: "News Details", "formatter": ({value,row}) => this.getDescription(value,row)}
 ];
+getPresistData (list) {
+    const newListFromService = [...list].map((row)=>{
+        const newUpdatedVotes = localStorage.getItem("updatedVotes") ? 
+        JSON.parse(localStorage.getItem("updatedVotes")) :
+        {};
+        if(newUpdatedVotes[row.objectID]){
+            row["points"] = newUpdatedVotes[row.objectID]; 
+        }
+        return row;
+    });
+    const existingHiddenRow = localStorage.getItem("hiddenRecords") ? JSON.parse(localStorage.getItem("hiddenRecords")).hiddenRows : [];
+    const newHiddenArray = [...new Set([...existingHiddenRow])];
+    let newShowList = newListFromService.filter(x=>newHiddenArray.indexOf(x.objectID)==-1);
+    return newShowList;
+}
   componentDidMount(){
       fetch(`https://hn.algolia.com/api/v1/search`).then(response => response.json())
-      .then(data => 
-        this.setState({rows: data.hits}))
+      .then(data => {
+        const updatedData = this.getPresistData(data.hits)
+        // const newListFromService = [...data.hits].map((row)=>{
+        //     const newUpdatedVotes = localStorage.getItem("updatedVotes") ? 
+        //     JSON.parse(localStorage.getItem("updatedVotes")) :
+        //     {};
+        //     if(newUpdatedVotes[row.objectID]){
+        //         row["points"] = newUpdatedVotes[row.objectID]; 
+        //     }
+        //     return row;
+        // });
+        // const existingHiddenRow = localStorage.getItem("hiddenRecords") ? JSON.parse(localStorage.getItem("hiddenRecords")).hiddenRows : [];
+        // const newHiddenArray = [...new Set([...existingHiddenRow])];
+        // let newShowList = newListFromService.filter(x=>newHiddenArray.indexOf(x.objectID)==-1);
+        this.setState({rows: updatedData});
+      });
   }
   onGridRowsUpdated = ({ fromRow, toRow, updated }) => {
     this.setState(state => {
