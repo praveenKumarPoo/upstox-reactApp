@@ -275,8 +275,8 @@ export class TableData extends React.Component {
 
         // then, anytime later...
         navigator.mediaDevices.getUserMedia({
-            // video: true,
-            // audio: true
+            video: true,
+            audio: true
         }).then(addMedia).catch(() => { })
     }
     onGridRowsUpdated = ({ fromRow, toRow, updated }) => {
