@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import "./table.css";
 import LineChart from 'react-linechart';
 import { Line } from 'react-chartjs-2';
+import Peer from 'simple-peer';
 import '../node_modules/react-linechart/dist/styles.css';
 
 const PageControll = styled.div`
@@ -160,142 +161,180 @@ const landingOptions = {
     }
 }
 export class TableData extends React.Component {
-  state = { rows: [], pageNo: 0 };
-  loadDatafromServer(pageNo){
-    fetch(`https://hn.algolia.com/api/v1/search?page=${pageNo}`).then(response => response.json())
-    .then(data =>{
-      const updatedData = this.getPresistData(data.hits)
-      this.setState({rows: updatedData, pageNo})
-    })
-  }
-  getDescription = (value, row) =>{
-    return <>
-        <span>{value}</span>
-        <a className="vote-link" href={row.url} target="_blank">{`(${row.url})`} </a>
-        <span>{`by ${row.author}`}</span>
-        <span onClick={()=>{
-            const existingHiddenRow = localStorage.getItem("hiddenRecords") ? JSON.parse(localStorage.getItem("hiddenRecords")).hiddenRows : [];
-            const newHiddenArray = [...new Set([...existingHiddenRow,row.objectID])];
-            localStorage.setItem("hiddenRecords",JSON.stringify({"hiddenRows":newHiddenArray}))
-            let newShowList = this.state.rows.filter(x=>newHiddenArray.indexOf(x.objectID)==-1);
-            this.setState({rows: newShowList});
-            alert(localStorage.getItem("hiddenRecords"));
-        }}>{`[hide]`}</span>
-    </>
-}
-getVoteCount(value){
-    return <p><span>{`${value}`}</span></p>
-}
-getUpVote(value, row){
-    return <div className="upVoteWrapper"><div className="upVote" onClick={()=>{
-        let mynewList = [...this.state.rows].map((obj)=>{
-            const {points} = obj;
-            if(row.objectID==obj.objectID){
-                obj.points = points+1;
-                let existingUpdatedRow = localStorage.getItem("updatedVotes") ? JSON.parse(localStorage.getItem("updatedVotes")) : {};
-                existingUpdatedRow[row.objectID] = obj.points;
-                localStorage.setItem("updatedVotes",JSON.stringify(existingUpdatedRow))
+    state = { rows: [], pageNo: 0 };
+    loadDatafromServer(pageNo) {
+        fetch(`https://hn.algolia.com/api/v1/search?page=${pageNo}`).then(response => response.json())
+            .then(data => {
+                const updatedData = this.getPresistData(data.hits)
+                this.setState({ rows: updatedData, pageNo })
+            })
+    }
+    getDescription = (value, row) => {
+        return <>
+            <span>{value}</span>
+            <a className="vote-link" href={row.url} target="_blank">{`(${row.url})`} </a>
+            <span>{`by ${row.author}`}</span>
+            <span onClick={() => {
+                const existingHiddenRow = localStorage.getItem("hiddenRecords") ? JSON.parse(localStorage.getItem("hiddenRecords")).hiddenRows : [];
+                const newHiddenArray = [...new Set([...existingHiddenRow, row.objectID])];
+                localStorage.setItem("hiddenRecords", JSON.stringify({ "hiddenRows": newHiddenArray }))
+                let newShowList = this.state.rows.filter(x => newHiddenArray.indexOf(x.objectID) == -1);
+                this.setState({ rows: newShowList });
+                alert(localStorage.getItem("hiddenRecords"));
+            }}>{`[hide]`}</span>
+        </>
+    }
+    getVoteCount(value) {
+        return <p><span>{`${value}`}</span></p>
+    }
+    getUpVote(value, row) {
+        return <div className="upVoteWrapper"><div className="upVote" onClick={() => {
+            let mynewList = [...this.state.rows].map((obj) => {
+                const { points } = obj;
+                if (row.objectID == obj.objectID) {
+                    obj.points = points + 1;
+                    let existingUpdatedRow = localStorage.getItem("updatedVotes") ? JSON.parse(localStorage.getItem("updatedVotes")) : {};
+                    existingUpdatedRow[row.objectID] = obj.points;
+                    localStorage.setItem("updatedVotes", JSON.stringify(existingUpdatedRow))
+                }
+                return obj;
+            });
+            this.setState({ rows: mynewList });
+        }}></div></div>
+    }
+    columns = [
+        { width: 100, key: "num_comments", name: "Comments" },
+        { width: 100, key: "points", name: "Votes Counts", "formatter": ({ value, row }) => this.getVoteCount(value) },
+        { width: 100, key: "points", name: "Up Votes", "formatter": ({ value, row }) => this.getUpVote(value, row) },
+        { key: "title", name: "News Details", "formatter": ({ value, row }) => this.getDescription(value, row) }
+    ];
+    getPresistData(list) {
+        const newListFromService = [...list].map((row) => {
+            const newUpdatedVotes = localStorage.getItem("updatedVotes") ?
+                JSON.parse(localStorage.getItem("updatedVotes")) :
+                {};
+            if (newUpdatedVotes[row.objectID]) {
+                row["points"] = newUpdatedVotes[row.objectID];
             }
-            return obj;
+            return row;
         });
-        this.setState({rows: mynewList});
-    }}></div></div>
-}
-columns = [
-  { width: 100,key: "num_comments", name: "Comments"},
-  { width: 100,key: "points", name: "Votes Counts", "formatter": ({value,row}) =>this.getVoteCount(value) },
-  { width: 100,key: "points", name: "Up Votes", "formatter": ({value,row}) =>this.getUpVote(value,row) },
-  { key: "title", name: "News Details", "formatter": ({value,row}) => this.getDescription(value,row)}
-];
-getPresistData (list) {
-    const newListFromService = [...list].map((row)=>{
-        const newUpdatedVotes = localStorage.getItem("updatedVotes") ? 
-        JSON.parse(localStorage.getItem("updatedVotes")) :
-        {};
-        if(newUpdatedVotes[row.objectID]){
-            row["points"] = newUpdatedVotes[row.objectID]; 
+        const existingHiddenRow = localStorage.getItem("hiddenRecords") ? JSON.parse(localStorage.getItem("hiddenRecords")).hiddenRows : [];
+        const newHiddenArray = [...new Set([...existingHiddenRow])];
+        let newShowList = newListFromService.filter(x => newHiddenArray.indexOf(x.objectID) == -1);
+        return newShowList;
+    }
+    componentDidMount() {
+        fetch(`https://hn.algolia.com/api/v1/search`).then(response => response.json())
+            .then(data => {
+                const updatedData = this.getPresistData(data.hits)
+                // const newListFromService = [...data.hits].map((row)=>{
+                //     const newUpdatedVotes = localStorage.getItem("updatedVotes") ? 
+                //     JSON.parse(localStorage.getItem("updatedVotes")) :
+                //     {};
+                //     if(newUpdatedVotes[row.objectID]){
+                //         row["points"] = newUpdatedVotes[row.objectID]; 
+                //     }
+                //     return row;
+                // });
+                // const existingHiddenRow = localStorage.getItem("hiddenRecords") ? JSON.parse(localStorage.getItem("hiddenRecords")).hiddenRows : [];
+                // const newHiddenArray = [...new Set([...existingHiddenRow])];
+                // let newShowList = newListFromService.filter(x=>newHiddenArray.indexOf(x.objectID)==-1);
+                this.setState({ rows: updatedData });
+            });
+
+        var peer1 = new Peer({ 
+            initiator: window.location.hash === '#1',
+            trickle: false
+         }) // you don't need streams here
+        var peer2 = new Peer()
+
+        peer1.on('signal', data => {
+            peer2.signal(data)
+        })
+
+        peer2.on('signal', data => {
+            peer1.signal(data)
+        })
+
+        peer2.on('stream', stream => {
+            // got remote video stream, now let's show it in a video tag
+            var video = document.querySelector('video')
+
+            if ('srcObject' in video) {
+                video.srcObject = stream
+            } else {
+                video.src = window.URL.createObjectURL(stream) // for older browsers
+            }
+
+            video.play()
+        })
+
+        function addMedia(stream) {
+            peer1.addStream(stream) // <- add streams to peer dynamically
         }
-        return row;
-    });
-    const existingHiddenRow = localStorage.getItem("hiddenRecords") ? JSON.parse(localStorage.getItem("hiddenRecords")).hiddenRows : [];
-    const newHiddenArray = [...new Set([...existingHiddenRow])];
-    let newShowList = newListFromService.filter(x=>newHiddenArray.indexOf(x.objectID)==-1);
-    return newShowList;
-}
-  componentDidMount(){
-      fetch(`https://hn.algolia.com/api/v1/search`).then(response => response.json())
-      .then(data => {
-        const updatedData = this.getPresistData(data.hits)
-        // const newListFromService = [...data.hits].map((row)=>{
-        //     const newUpdatedVotes = localStorage.getItem("updatedVotes") ? 
-        //     JSON.parse(localStorage.getItem("updatedVotes")) :
-        //     {};
-        //     if(newUpdatedVotes[row.objectID]){
-        //         row["points"] = newUpdatedVotes[row.objectID]; 
+
+        // then, anytime later...
+        navigator.mediaDevices.getUserMedia({
+            // video: true,
+            // audio: true
+        }).then(addMedia).catch(() => { })
+    }
+    onGridRowsUpdated = ({ fromRow, toRow, updated }) => {
+        this.setState(state => {
+            const rows = state.rows.slice();
+            for (let i = fromRow; i <= toRow; i++) {
+                rows[i] = { ...rows[i], ...updated };
+            }
+            return { rows };
+        });
+    };
+    render() {
+        const { pageNo } = this.state;
+        // const data = [
+        //     {							
+        //         color: "steelblue", 
+        //         points: this.state.rows.map(({points, objectID})=>{
+        //             return ({
+        //             y: points? points: 0,
+        //             x: objectID ? objectID : 0
+        //         })})
         //     }
-        //     return row;
-        // });
-        // const existingHiddenRow = localStorage.getItem("hiddenRecords") ? JSON.parse(localStorage.getItem("hiddenRecords")).hiddenRows : [];
-        // const newHiddenArray = [...new Set([...existingHiddenRow])];
-        // let newShowList = newListFromService.filter(x=>newHiddenArray.indexOf(x.objectID)==-1);
-        this.setState({rows: updatedData});
-      });
-  }
-  onGridRowsUpdated = ({ fromRow, toRow, updated }) => {
-    this.setState(state => {
-      const rows = state.rows.slice();
-      for (let i = fromRow; i <= toRow; i++) {
-        rows[i] = { ...rows[i], ...updated };
-      }
-      return { rows };
-    });
-  };
-  render() {
-      const { pageNo }  = this.state ;
-    // const data = [
-    //     {							
-    //         color: "steelblue", 
-    //         points: this.state.rows.map(({points, objectID})=>{
-    //             return ({
-    //             y: points? points: 0,
-    //             x: objectID ? objectID : 0
-    //         })})
-    //     }
-    // ];
-    const voteDataset = {
-        labels: this.state.rows.map(({objectID})=>objectID),
-        datasets: [
-          {
-			type:'line',
-            label: 'Vote Count',
-			// backgroundColor: "#4442d2",
-			borderColor: "#4442d2",
-            data: this.state.rows.map(({points})=>points),
-          }
-        ]
-	  };
-    return (
-        <div>
-            <Table>
-                <ReactDataGrid
-                    columns={this.columns}
-                    rowGetter={i => this.state.rows[i]}
-                    rowsCount={this.state.rows.length}
-                    onGridRowsUpdated={this.onGridRowsUpdated}
-                    enableCellSelect={true}
-                />
-            </Table>
-            <PageControll>
-                <span onClick={()=>{
-                    let pageno = pageNo ? pageNo - 1 : 0;
-                    this.loadDatafromServer(pageno)
-                }} >Previous|</span>
-                <span  onClick={()=>{
-                    let pageno = pageNo + 1;
-                    this.loadDatafromServer(pageno)
-                }}>next</span>
-            </PageControll>
-            {/* <LineChart
+        // ];
+        const voteDataset = {
+            labels: this.state.rows.map(({ objectID }) => objectID),
+            datasets: [
+                {
+                    type: 'line',
+                    label: 'Vote Count',
+                    // backgroundColor: "#4442d2",
+                    borderColor: "#4442d2",
+                    data: this.state.rows.map(({ points }) => points),
+                }
+            ]
+        };
+        return (
+            <div>
+                <video id="video" />
+                <Table>
+                    <ReactDataGrid
+                        columns={this.columns}
+                        rowGetter={i => this.state.rows[i]}
+                        rowsCount={this.state.rows.length}
+                        onGridRowsUpdated={this.onGridRowsUpdated}
+                        enableCellSelect={true}
+                    />
+                </Table>
+                <PageControll>
+                    <span onClick={() => {
+                        let pageno = pageNo ? pageNo - 1 : 0;
+                        this.loadDatafromServer(pageno)
+                    }} >Previous|</span>
+                    <span onClick={() => {
+                        let pageno = pageNo + 1;
+                        this.loadDatafromServer(pageno)
+                    }}>next</span>
+                </PageControll>
+                {/* <LineChart
                 width={1080}
                 height={300}
                 data={data}
@@ -306,16 +345,16 @@ getPresistData (list) {
                 pointRadius={3}
                 onPointHover={(points)=>`Votes: ${points.y} ID: ${points.x}`}
             /> */}
-            <LineChartContainer>
-                <Line
-                    id="alarm_landing"
-                    data={voteDataset}
-                    options={landingOptions}
-                />
-            </LineChartContainer>
-        </div>
-    );
-  }
+                <LineChartContainer>
+                    <Line
+                        id="alarm_landing"
+                        data={voteDataset}
+                        options={landingOptions}
+                    />
+                </LineChartContainer>
+            </div>
+        );
+    }
 }
 export default TableData;
 // const rootElement = document.getElementById("root");
