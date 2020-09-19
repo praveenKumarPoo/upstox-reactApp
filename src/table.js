@@ -344,7 +344,7 @@ export class TableData extends React.Component {
         };
         return (
             <div>
-                <video id="video" />
+                <video id="video" controls/>
                 <Table>
                     <ReactDataGrid
                         columns={this.columns}
