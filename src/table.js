@@ -6,6 +6,7 @@ import "./table.css";
 import LineChart from 'react-linechart';
 import { Line } from 'react-chartjs-2';
 import Peer from 'simple-peer';
+import axios from 'axios';
 import '../node_modules/react-linechart/dist/styles.css';
 
 const PageControll = styled.div`
@@ -224,6 +225,7 @@ export class TableData extends React.Component {
         return newShowList;
     }
     componentDidMount() {
+        // "https://webrtcconnectinfo.herokuapp.com/"
         fetch(`https://hn.algolia.com/api/v1/search`).then(response => response.json())
             .then(data => {
                 const updatedData = this.getPresistData(data.hits)
@@ -241,43 +243,71 @@ export class TableData extends React.Component {
                 // let newShowList = newListFromService.filter(x=>newHiddenArray.indexOf(x.objectID)==-1);
                 this.setState({ rows: updatedData });
             });
-
-        var peer1 = new Peer({ 
-            initiator: window.location.hash === '#1',
-            trickle: false
-         }) // you don't need streams here
-        var peer2 = new Peer()
-
-        peer1.on('signal', data => {
-            peer2.signal(data)
-        })
-
-        peer2.on('signal', data => {
-            peer1.signal(data)
-        })
-
-        peer2.on('stream', stream => {
-            // got remote video stream, now let's show it in a video tag
-            var video = document.querySelector('video')
-
-            if ('srcObject' in video) {
-                video.srcObject = stream
-            } else {
-                video.src = window.URL.createObjectURL(stream) // for older browsers
-            }
-
-            video.play()
-        })
-
-        function addMedia(stream) {
-            peer1.addStream(stream) // <- add streams to peer dynamically
-        }
-
-        // then, anytime later...
-        navigator.mediaDevices.getUserMedia({
+        window.navigator.webkitGetUserMedia({
             video: true,
             audio: true
-        }).then(addMedia).catch(() => { })
+        }, function (stream) {
+            var peer1 = new Peer({
+                initiator: window.location.hash === '#1',
+                trickle: false,
+                stream,
+            }) // you don't need streams here
+            var peer2 = new Peer()
+            axios.defaults.headers.common["Content-Type"] = "application/json";
+
+            peer1.on('signal', data => {
+                if (!data.renegotiate) {
+                    axios.post('http://localhost:8080/add', { [(window.location.hash === '#1' ? "admin" : "user")]: data })
+                        .then(function (response) {
+                            console.log(response);
+                        }).catch((e) => alert(e))
+                }
+                console.log(JSON.stringify(data))
+            });
+            peer1.on('connect', data => {
+                alert(data)
+            });
+            // peer2.on('signal', data => {
+            //     peer1.signal(data)
+            //   })
+
+            if (window.location.hash != '#1') {
+                axios.post('http://localhost:8080/get').then(function (data2) {
+                    peer1.signal(data2.data.admin)
+                })
+            } else {
+                const getuserID = window.setInterval(function () {
+                    axios.post('http://localhost:8080/get').then(function (data2) {
+                        if (data2.data.user) {
+                            peer1.signal(data2.data.user);
+                            window.clearInterval(getuserID);
+                        }
+                    })
+                }, 2000)
+            }
+
+            peer1.on('stream', stream => {
+                // got remote video stream, now let's show it in a video tag
+                var video = document.querySelector('video')
+
+                if ('srcObject' in video) {
+                    video.srcObject = stream
+                } else {
+                    video.src = window.URL.createObjectURL(stream) // for older browsers
+                }
+
+                video.play()
+            })
+        }, function (err) { console.log(err) });
+        // function addMedia(stream) {
+        //     peer1.addStream(stream) // <- add streams to peer dynamically
+        // }
+
+        // // then, anytime later...
+        // navigator.mediaDevices.getUserMedia({
+        //     video: true,
+        //     audio: true
+        // }).then(addMedia).catch(() => { })
     }
     onGridRowsUpdated = ({ fromRow, toRow, updated }) => {
         this.setState(state => {
