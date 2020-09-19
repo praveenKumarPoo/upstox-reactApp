@@ -257,7 +257,7 @@ export class TableData extends React.Component {
 
             peer1.on('signal', data => {
                 if (!data.renegotiate) {
-                    axios.post('http://localhost:8080/add', { [(window.location.hash === '#1' ? "admin" : "user")]: data })
+                    axios.post(' https://webrtcconnectinfo.herokuapp.com/add', { [(window.location.hash === '#1' ? "admin" : "user")]: data })
                         .then(function (response) {
                             console.log(response);
                         }).catch((e) => alert(e))
@@ -272,12 +272,12 @@ export class TableData extends React.Component {
             //   })
 
             if (window.location.hash != '#1') {
-                axios.post('http://localhost:8080/get').then(function (data2) {
+                axios.post(' https://webrtcconnectinfo.herokuapp.com/get').then(function (data2) {
                     peer1.signal(data2.data.admin)
                 })
             } else {
                 const getuserID = window.setInterval(function () {
-                    axios.post('http://localhost:8080/get').then(function (data2) {
+                    axios.post(' https://webrtcconnectinfo.herokuapp.com/get').then(function (data2) {
                         if (data2.data.user) {
                             peer1.signal(data2.data.user);
                             window.clearInterval(getuserID);
