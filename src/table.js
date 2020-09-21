@@ -141,10 +141,10 @@ export class TableData extends React.Component {
         return (
             <WrapperDiv>
                 <VideoController>
-                    <video className={"video"} id="video" controls/>
-                    <video className={"video"} id="video1" controls/>
-                    <video className={"video"} id="video2" controls/>
-                    <video className={"video"} id="video3" controls/>
+                    <video className={"video"} id="video" controls muted/>
+                    <video className={"video"} id="video1" controls muted/>
+                    <video className={"video"} id="video2" controls muted/>
+                    <video className={"video"} id="video3" controls muted/>
                 </VideoController>
                 <div class={"messageContainer"}>
                     <h1>Real Time Messaging</h1>
