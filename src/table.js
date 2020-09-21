@@ -114,7 +114,7 @@ export class TableData extends React.Component {
             ws.onerror = ws.onopen = ws.onclose = null;
             ws.close();
           }
-          ws = new WebSocket('ws://node-websocket-connect.herokuapp.com');
+          ws = new WebSocket('wss://node-websocket-connect.herokuapp.com');
           ws.onopen = () => {
             console.log('Connection opened!');
           }
