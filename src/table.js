@@ -17,8 +17,9 @@ const VideoController = styled.div`
     background-color: gray;
     width: 70vw;
     & video{
-        min-width: 30vw;
-        max-width: 40vw;
+        padding: 10px;
+        margin : 5px;
+        width:45%;
         min-height: 30vh;
         max-height: 40vh;
     }
@@ -72,12 +73,12 @@ export class TableData extends React.Component {
                 const getuserID = window.setInterval(function () {
                     axios.post('https://webrtcconnectinfo.herokuapp.com/get').then(function (data2) {
                         const userList = data2.data.filter((x)=>x.user)
-                        if (userList.length) {
-                            peer1.signal(userList[0].user);
+                        for(var i=0; i<userList.length; i++) {
+                            peer1.signal(userList[i].user);
                             window.clearInterval(getuserID);
                         }
                     })
-                }, 2000)
+                }, 2000);
             }
 
             peer1.on('stream', stream => {
@@ -127,6 +128,7 @@ export class TableData extends React.Component {
         sendBtn.onclick = function() {
           if (!ws) {
             showMessage("No WebSocket connection :(");
+            init();
             return ;
           }
     
@@ -146,7 +148,7 @@ export class TableData extends React.Component {
                     <video className={"video"} id="video2" controls muted/>
                     <video className={"video"} id="video3" controls muted/>
                 </VideoController>
-                <div class={"messageContainer"}>
+                <div className={"messageContainer"}>
                     <h1>Real Time Messaging</h1>
                     <pre id="messages" style={{ height: "100px", overflow: "scroll" }}></pre>
                     <input type="text" id="messageBox" placeholder="Type your message here" style={{ display: "block", width: "100%", marginBottom: "10px", padding: "10px" }} />
