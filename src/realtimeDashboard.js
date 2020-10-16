@@ -65,7 +65,7 @@ export class RealTimeDashboard extends React.Component {
                 ws.onerror = ws.onopen = ws.onclose = null;
                 ws.close();
             }
-            ws = new WebSocket('ws://localhost:3001/watch');
+            ws = new WebSocket('wss://node-websocket-connect.herokuapp.com/watch');
             ws.onopen = () => {
                 console.log('Connection opened!');
             }

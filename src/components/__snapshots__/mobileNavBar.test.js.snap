@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Match Snapshort 1`] = `
+<nav
+  className="sc-AxjAm cqheYL"
+>
+  <ul
+    className="nav-list"
+  >
+    <li>
+      <a
+        className="link"
+        data-testid="dashboard"
+        href="/Dashboard"
+        onClick={[Function]}
+      >
+        Dashboard
+      </a>
+    </li>
+    <li>
+      <a
+        className="link"
+        data-testid="LiveChart"
+        href="/LiveChart"
+        onClick={[Function]}
+      >
+        Live stock chart
+      </a>
+    </li>
+  </ul>
+</nav>
+`;

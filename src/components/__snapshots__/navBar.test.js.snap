@@ -1,0 +1,78 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Match Snapshort 1`] = `
+<div
+  className="sc-AxhCb dYEaRl"
+>
+  <nav
+    className="sc-AxjAm ffuoIy"
+  >
+    <div
+      className="logo"
+    >
+      UpStoX
+    </div>
+    <ul
+      className="nav-list"
+    >
+      <li>
+        <a
+          className="link"
+          data-testid="dashboard"
+          href="/Dashboard"
+          onClick={[Function]}
+        >
+          Dashboard
+        </a>
+      </li>
+      <li>
+        <a
+          className="link"
+          data-testid="LiveChart"
+          href="/LiveChart"
+          onClick={[Function]}
+        >
+          Live stock chart
+        </a>
+      </li>
+    </ul>
+    <button
+      className="sc-AxirZ jLFzrT"
+      onClick={[Function]}
+    >
+      <img
+        alt="open button"
+        src="leftarrow.svg"
+      />
+    </button>
+  </nav>
+  <nav
+    className="sc-AxiKw gYWKIw"
+  >
+    <ul
+      className="nav-list"
+    >
+      <li>
+        <a
+          className="link"
+          data-testid="dashboard"
+          href="/Dashboard"
+          onClick={[Function]}
+        >
+          Dashboard
+        </a>
+      </li>
+      <li>
+        <a
+          className="link"
+          data-testid="LiveChart"
+          href="/LiveChart"
+          onClick={[Function]}
+        >
+          Live stock chart
+        </a>
+      </li>
+    </ul>
+  </nav>
+</div>
+`;
