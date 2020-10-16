@@ -10,7 +10,11 @@ code is pushed to cloud herokuapp if you want to verify, you can access below ur
 
 http://poo-prav-app.herokuapp.com/
 
- Realtime websocket connection need to run websocket project locally, which i will be sharing with this project same way you need to run with below command 
+ Realtime websocket connection need to run websocket project locally, ##https://github.com/praveenKumarPoo/upstox/tree/master checkout
+
+follow 
+ ### `npm install`
+### `npm start`
 
 ## About WebApp
 
